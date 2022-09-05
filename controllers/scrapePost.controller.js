@@ -40,8 +40,9 @@ const scrapePost = async(req, res) => {
    res.status(200).json({
      msg: "File created succesfully",
      status_title: "Scrapping",
-     status_message: text,
+     status_message: "caption",
      url: url,
+     text: text,
    });
   
   
