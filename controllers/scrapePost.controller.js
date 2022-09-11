@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs/promises");
+const path = require("path");
 const { req, res } = require("express");
 
 
@@ -44,33 +45,26 @@ const scrapePost = async(req, res) => {
      console.log(text);
 } */
 
-  
-  
-  
-  
-
-  
-  
-  
-  
-  const names = await page.evaluate(() => {
-    return Array.from(
-      document.querySelectorAll(".ficha-producto div span")
-      // document.querySelectorAll(".precio")
-    ).map((x) => x.textContent);
-  });
-
-
-    const title = await page.evaluate(() => {
+  const title = await page.evaluate(() => {
     return Array.from(
       document.querySelectorAll(".main-product h1")
       // document.querySelectorAll(".precio")
     ).map((x) => x.textContent);
   });
 
+  const divData = await page.evaluate(() => {
+    return Array.from(
+      document.querySelectorAll(".ficha-producto div p span")
+      // document.querySelectorAll(".precio")
+    ).map((x) => x.textContent);
+  });
 
-  
-  await fs.writeFile("names.txt", names.join("\r\n"));
+  const especifications = await page.evaluate(() => {
+    return Array.from(
+      document.querySelectorAll(".especificaciones ul")
+      // document.querySelectorAll(".precio")
+    ).map((x) => x.textContent);
+  });
 
   // await page.click("#clickme");
   // const clickedData = await page.$eval("#data", (el) => el.textContent);
@@ -80,28 +74,50 @@ const scrapePost = async(req, res) => {
     return imgs.map((x) => x.src);
   });
 
-
-  
   // await page.type("#ourfield", "blue")
   // await Promise.all([page.click("#ourform button"), page.waitForNavigation()])
   // const info = await page.$eval("#message", el => el.textContent)
   // console.log(info)
 
+  /*   fs.mkdir(path.join(__dirname, "/.loud", 0777), (err) => {
+    if (err) {
+      return console.error(err);
+    }
+    console.log("Directory created successfully!");
+  }); */
+
+  const __dirname = `IMAGES/${divData[1]}/`;
+  // const __dirname = `IMAGES`;
+
+  fs.mkdir(path.join(__dirname), { recursive: true }, function (err) {
+    // fs.mkdir(path.join(__dirname, `${divData[1]}`), {recursive: true}, function (err) {
+    if (err) console.log("Failed to create file at " + __dirname);
+  });
+
+  // await fs.writeFile("PRODUCT.txt", divData.join("\r\n"));
+
   for (const photo of photos) {
-    const imagepage = await page.goto(photo)
-    await fs.writeFile(photo.split("/").pop(), await imagepage.buffer())
-  } 
+    const imagepage = await page.goto(photo);
+    await fs.writeFile(
+      `./${__dirname}/${photo.split("/").pop()}`,
+      await imagepage.buffer()
+    );
+  }
 
   await browser.close();
 
   res.status(200).json({
-    msg: "File created succesfully",
-    status_title: "Scrapping",
-    status_message: "caption",
+    msg: "File scrapped succesfully",
     url: url,
-    text: names,
     title: title.toString().toUpperCase(),
-    photos: photos
+    name: divData[0],
+    ref: divData[1],
+    weight: divData[2],
+    ean: divData[3],
+    // div: divData,
+    especifications: especifications.join("\r\n").replace(/[\r\n]/gm, " "),
+    // especifications: especifications.replace(/[\r\n]/gm, " "),
+    photos: photos,
   });
 }
 
