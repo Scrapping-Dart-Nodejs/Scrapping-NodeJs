@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
-const fs = require("fs/promises");
+// const fs = require("fs/promises");
+const fs = require("fs");
 const path = require("path");
 const { req, res } = require("express");
 
@@ -98,10 +99,15 @@ const scrapePost = async(req, res) => {
 
   for (const photo of photos) {
     const imagepage = await page.goto(photo);
-    await fs.writeFile(
-      `./${__dirname}/${photo.split("/").pop()}`,
-      await imagepage.buffer()
-    );
+fs.writeFile(`./${__dirname}/${photo.split("/").pop()}`,await imagepage.buffer(), function (err) {
+  if (err) throw err;
+  console.log("File is created successfully");
+});
+    /* FS PROMISES */
+    // await fs.writeFile(
+    //   `./${__dirname}/${photo.split("/").pop()}`,
+    //   await imagepage.buffer()
+    // );
   }
 
   await browser.close();
